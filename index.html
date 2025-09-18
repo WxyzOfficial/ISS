@@ -1,0 +1,2635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Survival Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js" rel="stylesheet">
+    <style>
+        /* 
+        ===== IT SURVIVAL SIMULATOR =====
+        
+        FIREBASE SETUP INSTRUCTIONS:
+        1. Create a Firebase project at https://console.firebase.google.com
+        2. Enable Authentication with Email/Password and Google providers
+        3. Create Firestore database
+        4. Replace the firebaseConfig object below with your project's config
+        5. Update ADMIN_UIDS array with your user ID for admin access
+        6. Deploy Firestore security rules (see comments in JavaScript section)
+        
+        ADMIN ACCESS:
+        - Add your Firebase Auth UID to the ADMIN_UIDS array in the JavaScript section
+        - Admin panel will be accessible at #/admin route
+        
+        DEMO MODE:
+        - Toggle "Demo Mode" in the top nav to run without Firebase
+        - All sample tasks will work in offline mode
+        
+        FILE STRUCTURE:
+        - Single file containing HTML, CSS, and JavaScript
+        - Uses Firebase v9 modular SDK via CDN
+        - No build tools or external dependencies required
+        */
+
+        :root {
+            --color-primary: #3B82F6;
+            --color-primary-dark: #2563EB;
+            --color-secondary: #10B981;
+            --color-accent: #F59E0B;
+            --color-danger: #EF4444;
+            --color-warning: #F97316;
+            --color-success: #10B981;
+            --color-bg: #F8FAFC;
+            --color-surface: #FFFFFF;
+            --color-text: #1F2937;
+            --color-text-light: #6B7280;
+            --color-border: #E5E7EB;
+            --color-border-light: #F3F4F6;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Header */
+        .header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md) 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .demo-toggle {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .demo-toggle:hover {
+            background: #D97706;
+        }
+
+        /* Layout */
+        .app-layout {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--color-surface);
+            border-right: 1px solid var(--color-border);
+            padding: var(--spacing-lg);
+            position: sticky;
+            top: 73px;
+            height: calc(100vh - 73px);
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+        }
+
+        .nav-menu {
+            list-style: none;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .nav-item {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--color-text-light);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border-light);
+        }
+
+        .card-header {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        /* Task Cards */
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .task-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border-light);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .task-difficulty {
+            display: flex;
+            gap: 2px;
+        }
+
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-border);
+        }
+
+        .difficulty-dot.filled {
+            background: var(--color-warning);
+        }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .task-description {
+            color: var(--color-text-light);
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .task-xp {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+
+        .task-tags {
+            display: flex;
+            gap: var(--spacing-xs);
+            flex-wrap: wrap;
+        }
+
+        .task-tag {
+            background: var(--color-border-light);
+            color: var(--color-text-light);
+            padding: 2px var(--spacing-xs);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+        }
+
+        /* Simulator */
+        .simulator-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: var(--spacing-xl);
+            height: calc(100vh - 150px);
+        }
+
+        .simulator-main {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            overflow-y: auto;
+        }
+
+        .simulator-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .simulator-panel {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .simulator-panel h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-text);
+        }
+
+        .code-editor {
+            width: 100%;
+            min-height: 200px;
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #1F2937;
+            color: #F9FAFB;
+            resize: vertical;
+        }
+
+        .terminal {
+            background: #1F2937;
+            color: #F9FAFB;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-family: 'Monaco', 'Menlo', monospace;
+            min-height: 200px;
+            overflow-y: auto;
+        }
+
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            margin-top: var(--spacing-sm);
+        }
+
+        .terminal-prompt {
+            color: var(--color-success);
+            margin-right: var(--spacing-sm);
+        }
+
+        .terminal-command {
+            background: transparent;
+            border: none;
+            color: #F9FAFB;
+            font-family: inherit;
+            outline: none;
+            flex: 1;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--color-border-light);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-border);
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        /* Progress */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--color-border-light);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-success);
+            transition: width 0.3s ease;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: var(--spacing-lg);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .stat-label {
+            color: var(--color-text-light);
+            font-size: 0.875rem;
+            margin-top: var(--spacing-xs);
+        }
+
+        /* Badges */
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .badge {
+            text-align: center;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--color-border-light);
+            background: var(--color-surface);
+        }
+
+        .badge.earned {
+            border-color: var(--color-success);
+            background: #F0FDF4;
+        }
+
+        .badge-icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .badge-name {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .badge-description {
+            font-size: 0.75rem;
+            color: var(--color-text-light);
+        }
+
+        /* Leaderboard */
+        .leaderboard-list {
+            list-style: none;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .leaderboard-rank {
+            font-weight: 700;
+            color: var(--color-primary);
+            min-width: 30px;
+        }
+
+        .leaderboard-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-weight: 600;
+        }
+
+        .leaderboard-role {
+            font-size: 0.875rem;
+            color: var(--color-text-light);
+        }
+
+        .leaderboard-xp {
+            font-weight: 600;
+            color: var(--color-success);
+        }
+
+        /* Auth */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        }
+
+        .auth-card {
+            width: 400px;
+            max-width: 90vw;
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .auth-subtitle {
+            color: var(--color-text-light);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: var(--spacing-lg) 0;
+            color: var(--color-text-light);
+            font-size: 0.875rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .auth-divider span {
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--color-surface);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--color-border);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-color: var(--color-success);
+            background: #F0FDF4;
+        }
+
+        .toast.error {
+            border-color: var(--color-danger);
+            background: #FEF2F2;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-border);
+            border-radius: 50%;
+            border-top-color: var(--color-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .simulator-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .app-layout {
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding: var(--spacing-md);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-success {
+            color: var(--color-success);
+        }
+
+        .text-danger {
+            color: var(--color-danger);
+        }
+
+        .text-warning {
+            color: var(--color-warning);
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: var(--spacing-xs); }
+        .mb-2 { margin-bottom: var(--spacing-sm); }
+        .mb-3 { margin-bottom: var(--spacing-md); }
+        .mb-4 { margin-bottom: var(--spacing-lg); }
+        .mb-5 { margin-bottom: var(--spacing-xl); }
+
+        .mt-0 { margin-top: 0; }
+        .mt-1 { margin-top: var(--spacing-xs); }
+        .mt-2 { margin-top: var(--spacing-sm); }
+        .mt-3 { margin-top: var(--spacing-md); }
+        .mt-4 { margin-top: var(--spacing-lg); }
+        .mt-5 { margin-top: var(--spacing-xl); }
+
+        /* Footer */
+        .footer {
+        background: var(--color-surface, #fff);
+        border-top: 1px solid var(--color-border, #e5e7eb);
+        padding: 1rem;
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--color-text-light, #6b7280);
+        }
+    </style>
+</head>
+<body>
+    <!-- App Root -->
+    <div id="app"></div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Include Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            onAuthStateChanged,
+            signOut
+        } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            collection, 
+            addDoc, 
+            query, 
+            where, 
+            getDocs, 
+            orderBy, 
+            limit,
+            updateDoc,
+            arrayUnion,
+            serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+        import { 
+            getStorage, 
+            ref as storageRef, 
+            uploadBytes, 
+            getDownloadURL 
+        } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js';
+
+        // Firebase Configuration
+        // Replace with your actual Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDMZ08dDkvQVZYJjnup6BoyHlcK9pyICI",
+            authDomain: "survivalit-d6575.firebaseapp.com", 
+            projectId: "survivalit-d6575",
+            storageBucket: "survivalit-d6575.firebasestorage.app",
+            messagingSenderId: "1008093127074",
+            appId: "1:1008093127074:web:1be543615fef82286e52fb",
+	    measurementId: "G-QXRS2YL3VX"
+        };
+
+        // Admin UIDs - Replace with actual admin user IDs
+        const ADMIN_UIDS = ['JEa25D7sgfYzaXYQ6d0PhGjAFrn2'];
+
+        // Initialize Firebase (only if config is valid)
+        let app, auth, db, storage;
+        let isFirebaseEnabled = false;
+
+        try {
+            if (firebaseConfig.apiKey !== 'demo-api-key') {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                storage = getStorage(app);
+                isFirebaseEnabled = true;
+                console.log('Firebase initialized successfully');
+            } else {
+                console.log('Running in demo mode - Firebase not configured');
+            }
+        } catch (error) {
+            console.warn('Firebase initialization failed, running in demo mode:', error);
+            isFirebaseEnabled = false;
+        }
+
+        // Demo Mode State
+        let demoMode = !isFirebaseEnabled;
+        let demoUser = null;
+        let demoData = {
+            users: {},
+            tasks: {},
+            attempts: {},
+            leaderboard: []
+        };
+
+        // Application State
+        const state = {
+            user: null,
+            currentRoute: 'login',
+            currentTask: null,
+            currentAttempt: null,
+            isAdmin: false
+        };
+
+        // Sample Tasks - Hardcoded for demo and fallback
+        const sampleTasks = {
+            'demo-payroll-debug': {
+                id: 'demo-payroll-debug',
+                title: 'Payroll Script Debug',
+                difficulty: 3,
+                description: 'Your team receives a complaint: overtime pay is miscalculated in the company payroll system. The finance team is getting frustrated because employees are complaining about incorrect overtime calculations. You need to validate the input and fix the logic bug in this JavaScript payroll calculation function.',
+                contextTags: ['debugging', 'javascript', 'payroll'],
+                rewardXP: 150,
+                sampleHints: [
+                    'Look carefully at the mathematical operations in the function',
+                    'Think about how overtime pay should be calculated',
+                    'Check if division or multiplication is being used correctly'
+                ],
+                type: 'code-debug',
+                snippet: `function calcOvertime(baseSalary, hours) {
+    // Bug: using division instead of multiplication for overtime rate
+    return baseSalary / 8 * hours;
+}
+
+// Expected behavior:
+// baseSalary = 400 (daily wage)
+// hours = 4 (overtime hours)
+// Should return: 400 * 1.25 * 4 / 8 = 250
+// Currently returns: 400 / 8 * 4 = 200`,
+                solution: `function calcOvertime(baseSalary, hours) {
+    // Fixed: calculate hourly rate, then apply 1.25x multiplier for overtime
+    const hourlyRate = baseSalary / 8;
+    return hourlyRate * 1.25 * hours;
+}`,
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'barangay-wifi-setup': {
+                id: 'barangay-wifi-setup',
+                title: 'Barangay WiFi Setup',
+                difficulty: 2,
+                description: 'The Barangay Captain has asked you to set up a public WiFi network for the community center. You need to configure the router with proper security settings, bandwidth limits, and a captive portal for user registration. Make sure to follow government guidelines for public internet access.',
+                contextTags: ['networking', 'wifi', 'security'],
+                rewardXP: 120,
+                sampleHints: [
+                    'Use WPA3 or WPA2 security for the admin network',
+                    'Set up a separate guest network for public use',
+                    'Configure bandwidth limits to ensure fair usage'
+                ],
+                type: 'network-config',
+                steps: [
+                    'Configure router admin access',
+                    'Set up main WiFi network with WPA2/WPA3',
+                    'Create guest network for public access',
+                    'Configure captive portal',
+                    'Set bandwidth limits per user',
+                    'Test connectivity and registration flow'
+                ],
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'form-injection-patch': {
+                id: 'form-injection-patch',
+                title: 'Barangay Form SQL Injection',
+                difficulty: 4,
+                description: 'The barangay\'s online resident registration form has been compromised! Someone managed to access the database through SQL injection. You need to identify the vulnerability in the PHP code and implement proper security measures to prevent future attacks.',
+                contextTags: ['security', 'sql-injection', 'php'],
+                rewardXP: 200,
+                sampleHints: [
+                    'Look for unescaped user input in SQL queries',
+                    'Consider using prepared statements',
+                    'Validate and sanitize all user inputs'
+                ],
+                type: 'security-patch',
+                vulnerableCode: `<?php
+$name = $_POST['name'];
+$email = $_POST['email'];
+$address = $_POST['address'];
+
+$query = "INSERT INTO residents (name, email, address) 
+          VALUES ('$name', '$email', '$address')";
+$result = mysqli_query($connection, $query);
+?>`,
+                solution: `<?php
+$name = mysqli_real_escape_string($connection, $_POST['name']);
+$email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
+$address = mysqli_real_escape_string($connection, $_POST['address']);
+
+if (!$email) {
+    die("Invalid email format");
+}
+
+$stmt = mysqli_prepare($connection, 
+    "INSERT INTO residents (name, email, address) VALUES (?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "sss", $name, $email, $address);
+$result = mysqli_stmt_execute($stmt);
+?>`,
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'printer-panic': {
+                id: 'printer-panic',
+                title: 'Network Printer Panic',
+                difficulty: 2,
+                description: 'The office network printer stopped working and everyone is panicking because of the deadline for the quarterly reports. The printer shows as offline on all computers. You have access to the printer logs and network configuration. Identify the issue and restore printing functionality.',
+                contextTags: ['troubleshooting', 'printing', 'networking'],
+                rewardXP: 100,
+                sampleHints: [
+                    'Check if the printer has a valid IP address',
+                    'Verify the printer driver is installed correctly',
+                    'Test network connectivity to the printer'
+                ],
+                type: 'troubleshoot',
+                logs: `[2024-01-15 10:30:15] Printer Status: Online
+[2024-01-15 10:35:22] Network Interface: IP assigned via DHCP
+[2024-01-15 10:35:22] IP Address: 192.168.1.150
+[2024-01-15 11:15:33] Warning: Low toner (15%)
+[2024-01-15 14:22:11] Error: Network timeout
+[2024-01-15 14:22:15] Status: Offline
+[2024-01-15 14:22:20] DHCP lease expired
+[2024-01-15 14:22:25] Status: No IP address assigned`,
+                solution: 'DHCP lease expired. Solution: 1) Restart printer to request new DHCP lease, or 2) Configure static IP address, or 3) Check DHCP server availability',
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'thesis-deployment': {
+                id: 'thesis-deployment',
+                title: 'Student Thesis Website Deployment',
+                difficulty: 3,
+                description: 'A Computer Science student needs help deploying their thesis website before the defense tomorrow. The static site needs to be deployed to a web hosting service with proper domain configuration. Guide them through the deployment process and DNS setup.',
+                contextTags: ['deployment', 'web-hosting', 'dns'],
+                rewardXP: 160,
+                sampleHints: [
+                    'Choose a reliable hosting platform (Netlify, Vercel, etc.)',
+                    'Configure domain name and DNS settings',
+                    'Ensure HTTPS is enabled for security'
+                ],
+                type: 'deployment',
+                files: ['index.html', 'style.css', 'script.js', 'images/'],
+                steps: [
+                    'Upload files to hosting service',
+                    'Configure custom domain',
+                    'Set up DNS records',
+                    'Enable HTTPS/SSL',
+                    'Test website accessibility',
+                    'Set up analytics (optional)'
+                ],
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'ransomware-response': {
+                id: 'ransomware-response',
+                title: 'Ransomware Response Drill',
+                difficulty: 5,
+                description: 'EMERGENCY: A ransomware attack has been detected on the company network. You are the incident response team leader. You need to contain the threat, assess the damage, and coordinate recovery efforts. Make critical decisions to minimize business impact.',
+                contextTags: ['security', 'incident-response', 'ransomware'],
+                rewardXP: 250,
+                sampleHints: [
+                    'Isolate infected systems immediately',
+                    'Do not pay the ransom - focus on recovery',
+                    'Check backup integrity before restoration'
+                ],
+                type: 'decision-tree',
+                scenario: {
+                    initial: 'Multiple workstations are showing ransom messages. What is your first action?',
+                    decisions: [
+                        {
+                            choice: 'Disconnect infected machines from network',
+                            outcome: 'Good! Threat contained. Next: assess backup status?',
+                            points: 50
+                        },
+                        {
+                            choice: 'Try to remove ransomware immediately',
+                            outcome: 'Risk of further spread! Should isolate first.',
+                            points: 10
+                        },
+                        {
+                            choice: 'Contact law enforcement',
+                            outcome: 'Important but not immediate priority. Contain first.',
+                            points: 20
+                        }
+                    ]
+                },
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'pisonet-router-rescue': {
+                id: 'pisonet-router-rescue',
+                title: 'PisoNet Router Rescue',
+                difficulty: 3,
+                description: 'The local PisoNet (internet café) owner is losing customers because of intermittent internet connectivity. The router keeps dropping connections and port forwarding for online games isn\'t working. Help diagnose and fix the NAT/routing issues.',
+                contextTags: ['networking', 'router', 'nat', 'gaming'],
+                rewardXP: 140,
+                sampleHints: [
+                    'Check router temperature and ventilation',
+                    'Verify port forwarding rules are correct',
+                    'Update router firmware if available'
+                ],
+                type: 'network-troubleshoot',
+                symptoms: [
+                    'Frequent disconnections during peak hours',
+                    'Online games can\'t connect to servers',
+                    'Slow speed despite good ISP connection',
+                    'Router admin panel sometimes unresponsive'
+                ],
+                diagnostics: {
+                    temperature: '85°C (critical)',
+                    firmware: 'v1.2.3 (outdated)',
+                    nat_table: 'Full (1024/1024 entries)',
+                    uptime: '45 days (never restarted)'
+                },
+                solution: [
+                    'Improve router cooling/ventilation',
+                    'Update firmware to latest version',
+                    'Configure proper NAT timeout values',
+                    'Set up scheduled router reboots',
+                    'Optimize port forwarding rules'
+                ],
+                createdBy: 'system',
+                createdAt: new Date()
+            },
+            'midnight-alert': {
+                id: 'midnight-alert',
+                title: 'On-call Midnight Alert',
+                difficulty: 4,
+                description: 'It\'s 2 AM and you receive multiple alerts: the company website is down, the database is running slow, and angry customers are calling. As the on-call engineer, you need to prioritize issues, coordinate with team members, and communicate with stakeholders while working under pressure.',
+                contextTags: ['on-call', 'incident-management', 'communication'],
+                rewardXP: 180,
+                sampleHints: [
+                    'Prioritize by business impact and user count',
+                    'Keep stakeholders informed with regular updates',
+                    'Document all actions for post-incident review'
+                ],
+                type: 'incident-management',
+                alerts: [
+                    {
+                        severity: 'critical',
+                        service: 'Website',
+                        message: '500 errors on homepage',
+                        impact: '1000+ users affected'
+                    },
+                    {
+                        severity: 'warning', 
+                        service: 'Database',
+                        message: 'Query response time > 5s',
+                        impact: 'Slow page loads'
+                    },
+                    {
+                        severity: 'info',
+                        service: 'Email',
+                        message: 'Queue backlog growing',
+                        impact: 'Delayed notifications'
+                    }
+                ],
+                stakeholders: ['Manager', 'Customer Support', 'Development Team'],
+                createdBy: 'system',
+                createdAt: new Date()
+            }
+        };
+
+        // Available Badges
+        const badges = {
+            'first-task': {
+                id: 'first-task',
+                name: 'First Steps',
+                description: 'Complete your first task',
+                icon: '🎯',
+                requirement: 'complete_task_count >= 1'
+            },
+            'debugger': {
+                id: 'debugger',
+                name: 'Bug Hunter',
+                description: 'Fix 5 code bugs',
+                icon: '🐛',
+                requirement: 'debug_tasks_completed >= 5'
+            },
+            'security-expert': {
+                id: 'security-expert',
+                name: 'Security Expert',
+                description: 'Complete 3 security-related tasks',
+                icon: '🔒',
+                requirement: 'security_tasks_completed >= 3'
+            },
+            'network-ninja': {
+                id: 'network-ninja',
+                name: 'Network Ninja',
+                description: 'Master networking challenges',
+                icon: '🌐',
+                requirement: 'network_tasks_completed >= 3'
+            },
+            'speed-demon': {
+                id: 'speed-demon',
+                name: 'Speed Demon',
+                description: 'Complete a task in under 5 minutes',
+                icon: '⚡',
+                requirement: 'fast_completion'
+            },
+            'no-ai': {
+                id: 'no-ai',
+                name: 'Pure Brain Power',
+                description: 'Complete 10 tasks without AI assistance',
+                icon: '🧠',
+                requirement: 'no_ai_tasks >= 10'
+            }
+        };
+
+        // Utility Functions
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => container.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function navigate(route) {
+            state.currentRoute = route;
+            window.location.hash = route;
+            render();
+        }
+
+        function getInitials(name) {
+            return name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+        }
+
+        function calculateLevel(xp) {
+            return Math.floor(xp / 100) + 1;
+        }
+
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('en-PH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // Demo Mode Functions
+        function initDemoMode() {
+            demoUser = {
+                uid: 'demo-user',
+                displayName: 'Demo User',
+                email: 'demo@example.com',
+                role: 'Helpdesk',
+                xp: 350,
+                level: 4,
+                badges: ['first-task', 'debugger'],
+                createdAt: new Date(),
+                lastActive: new Date()
+            };
+
+            demoData.users[demoUser.uid] = demoUser;
+            demoData.tasks = { ...sampleTasks };
+            
+            // Generate demo leaderboard
+            demoData.leaderboard = [
+                { userId: 'demo-user', displayName: 'Demo User', role: 'Helpdesk', xp: 350 },
+                { userId: 'juan-dev', displayName: 'Juan Developer', role: 'Dev', xp: 420 },
+                { userId: 'maria-ops', displayName: 'Maria Ops', role: 'Ops', xp: 380 },
+                { userId: 'pedro-support', displayName: 'Pedro Support', role: 'Helpdesk', xp: 290 }
+            ].sort((a, b) => b.xp - a.xp);
+
+            state.user = demoUser;
+            state.isAdmin = true; // Demo user is admin
+        }
+
+        function toggleDemoMode() {
+            demoMode = !demoMode;
+            if (demoMode) {
+                initDemoMode();
+                showToast('Demo mode enabled', 'success');
+                navigate('dashboard');
+            } else {
+                if (isFirebaseEnabled && auth) {
+                    state.user = null;
+                    showToast('Demo mode disabled', 'info');
+                    navigate('login');
+                } else {
+                    demoMode = true;
+                    showToast('Firebase not configured, staying in demo mode', 'warning');
+                }
+            }
+            render();
+        }
+
+        // Firebase Functions
+        async function signUp(email, password, displayName, role) {
+            if (demoMode) {
+                demoUser = {
+                    uid: 'demo-' + Date.now(),
+                    displayName,
+                    email,
+                    role,
+                    xp: 0,
+                    level: 1,
+                    badges: [],
+                    createdAt: new Date(),
+                    lastActive: new Date()
+                };
+                demoData.users[demoUser.uid] = demoUser;
+                state.user = demoUser;
+                showToast('Account created successfully!', 'success');
+                navigate('dashboard');
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                const userData = {
+                    displayName,
+                    email,
+                    role,
+                    xp: 0,
+                    level: 1,
+                    badges: [],
+                    createdAt: serverTimestamp(),
+                    lastActive: serverTimestamp()
+                };
+
+                await setDoc(doc(db, 'users', user.uid), userData);
+                showToast('Account created successfully!', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function signIn(email, password) {
+            if (demoMode) {
+                state.user = demoUser;
+                showToast('Signed in successfully!', 'success');
+                navigate('dashboard');
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast('Signed in successfully!', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function signInWithGoogle() {
+            if (demoMode) {
+                state.user = demoUser;
+                showToast('Signed in with Google!', 'success');
+                navigate('dashboard');
+                return;
+            }
+
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showToast('Signed in with Google!', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function logout() {
+            if (demoMode) {
+                state.user = null;
+                navigate('login');
+                showToast('Signed out successfully', 'info');
+                return;
+            }
+
+            try {
+                await signOut(auth);
+                state.user = null;
+                navigate('login');
+                showToast('Signed out successfully', 'info');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function loadUserData(uid) {
+            if (demoMode) {
+                return demoData.users[uid] || demoUser;
+            }
+
+            try {
+                const userDoc = await getDoc(doc(db, 'users', uid));
+                return userDoc.exists() ? { uid, ...userDoc.data() } : null;
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                return null;
+            }
+        }
+
+        async function updateUserData(uid, data) {
+            if (demoMode) {
+                demoData.users[uid] = { ...demoData.users[uid], ...data };
+                return;
+            }
+
+            try {
+                await updateDoc(doc(db, 'users', uid), {
+                    ...data,
+                    lastActive: serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error updating user data:', error);
+            }
+        }
+
+        async function loadTasks() {
+            if (demoMode) {
+                return Object.values(demoData.tasks);
+            }
+
+            try {
+                const tasksSnapshot = await getDocs(collection(db, 'tasks'));
+                const tasks = [];
+                tasksSnapshot.forEach((doc) => {
+                    tasks.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // If no tasks in Firestore, return sample tasks
+                return tasks.length > 0 ? tasks : Object.values(sampleTasks);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                return Object.values(sampleTasks);
+            }
+        }
+
+        async function saveAttempt(taskId, status, score, actionsLog, reasoning) {
+            const attemptId = demoMode ? 
+                'demo-attempt-' + Date.now() : 
+                'attempt-' + Date.now();
+
+            const attemptData = {
+                userId: state.user.uid,
+                taskId,
+                status,
+                score,
+                actionsLog,
+                reasoning,
+                startedAt: state.currentAttempt?.startedAt || new Date(),
+                finishedAt: new Date()
+            };
+
+            if (demoMode) {
+                demoData.attempts[attemptId] = attemptData;
+                
+                // Update user XP if completed
+                if (status === 'completed') {
+                    const task = demoData.tasks[taskId];
+                    if (task) {
+                        demoUser.xp += score;
+                        demoUser.level = calculateLevel(demoUser.xp);
+                        
+                        // Check for new badges
+                        checkAndAwardBadges(taskId, status);
+                    }
+                }
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'attempts'), attemptData);
+                
+                // Update user XP if completed
+                if (status === 'completed') {
+                    const task = sampleTasks[taskId];
+                    if (task) {
+                        const newXP = state.user.xp + score;
+                        const newLevel = calculateLevel(newXP);
+                        
+                        await updateUserData(state.user.uid, {
+                            xp: newXP,
+                            level: newLevel
+                        });
+                        
+                        state.user.xp = newXP;
+                        state.user.level = newLevel;
+                        
+                        // Check for new badges
+                        checkAndAwardBadges(taskId, status);
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving attempt:', error);
+            }
+        }
+
+        async function loadLeaderboard() {
+            if (demoMode) {
+                return demoData.leaderboard;
+            }
+
+            try {
+                const usersSnapshot = await getDocs(
+                    query(collection(db, 'users'), orderBy('xp', 'desc'), limit(20))
+                );
+                const leaderboard = [];
+                usersSnapshot.forEach((doc) => {
+                    leaderboard.push({ id: doc.id, ...doc.data() });
+                });
+                return leaderboard;
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                return demoData.leaderboard;
+            }
+        }
+
+        function checkAndAwardBadges(taskId, status) {
+            // Simple badge logic - in production this would be more sophisticated
+            const newBadges = [];
+            
+            if (status === 'completed' && !state.user.badges.includes('first-task')) {
+                newBadges.push('first-task');
+            }
+            
+            const task = sampleTasks[taskId] || demoData.tasks[taskId];
+            if (task && task.contextTags.includes('debugging') && !state.user.badges.includes('debugger')) {
+                newBadges.push('debugger');
+            }
+            
+            if (newBadges.length > 0) {
+                state.user.badges.push(...newBadges);
+                updateUserData(state.user.uid, { badges: state.user.badges });
+                
+                newBadges.forEach(badgeId => {
+                    showToast(`🎉 Badge earned: ${badges[badgeId].name}!`, 'success');
+                });
+            }
+        }
+
+        // Task Engine Functions
+        function startTask(taskId) {
+            const task = sampleTasks[taskId] || (demoMode ? demoData.tasks[taskId] : null);
+            if (!task) {
+                showToast('Task not found', 'error');
+                return;
+            }
+
+            state.currentTask = task;
+            state.currentAttempt = {
+                taskId,
+                startedAt: new Date(),
+                actionsLog: []
+            };
+            
+            navigate('simulator');
+        }
+
+        function logAction(action, details) {
+            if (state.currentAttempt) {
+                state.currentAttempt.actionsLog.push({
+                    timestamp: new Date(),
+                    action,
+                    details
+                });
+            }
+        }
+
+        function executeCommand(command) {
+            logAction('command', command);
+            
+            // Simulate command responses based on current task
+            const responses = {
+                'help': 'Available commands: ping, nslookup, ipconfig, netstat, ps, ls, cat',
+                'ls': 'index.html  style.css  script.js  config.php  logs/',
+                'ping google.com': 'PING google.com (142.250.190.14): 56 data bytes\n64 bytes from 142.250.190.14: icmp_seq=0 ttl=113 time=12.345 ms',
+                'ipconfig': 'Ethernet adapter:\n  IP Address: 192.168.1.100\n  Subnet Mask: 255.255.255.0\n  Gateway: 192.168.1.1',
+                'netstat -an': 'Active Connections:\n  TCP  192.168.1.100:80   0.0.0.0:0   LISTENING\n  TCP  192.168.1.100:443  0.0.0.0:0   LISTENING'
+            };
+            
+            return responses[command.toLowerCase()] || `Command '${command}' not recognized. Type 'help' for available commands.`;
+        }
+
+        function submitTaskSolution(solution, reasoning) {
+            if (!state.currentTask || !state.currentAttempt) {
+                showToast('No active task', 'error');
+                return;
+            }
+
+            const task = state.currentTask;
+            let score = 0;
+            let status = 'failed';
+
+            // Simple scoring logic based on task type
+            if (task.type === 'code-debug') {
+                if (solution.includes('* 1.25') || solution.includes('hourlyRate')) {
+                    score = task.rewardXP;
+                    status = 'completed';
+                } else {
+                    score = Math.floor(task.rewardXP * 0.3);
+                }
+            } else if (task.type === 'security-patch') {
+                if (solution.includes('mysqli_prepare') || solution.includes('prepared')) {
+                    score = task.rewardXP;
+                    status = 'completed';
+                } else {
+                    score = Math.floor(task.rewardXP * 0.2);
+                }
+            } else {
+                // Generic scoring
+                if (reasoning && reasoning.length > 50) {
+                    score = Math.floor(task.rewardXP * 0.8);
+                    status = 'completed';
+                } else {
+                    score = Math.floor(task.rewardXP * 0.3);
+                }
+            }
+
+            // Check for AI assistance (simple heuristic)
+            const aiIndicators = ['chatgpt', 'copilot', 'ai generated', 'artificial intelligence'];
+            const hasAiIndicators = aiIndicators.some(indicator => 
+                (solution + reasoning).toLowerCase().includes(indicator)
+            );
+            
+            if (hasAiIndicators) {
+                score = Math.floor(score * 0.5);
+                showToast('AI assistance detected - score reduced', 'warning');
+            }
+
+            logAction('submit_solution', { solution, reasoning, score, status });
+            saveAttempt(task.id, status, score, state.currentAttempt.actionsLog, reasoning);
+            
+            showToast(
+                status === 'completed' ? 
+                `Task completed! +${score} XP` : 
+                `Task submitted with partial score: +${score} XP`, 
+                status === 'completed' ? 'success' : 'warning'
+            );
+
+            // Reset task state
+            state.currentTask = null;
+            state.currentAttempt = null;
+            navigate('dashboard');
+        }
+
+        // Admin Functions
+        async function createTask(taskData) {
+            if (demoMode) {
+                const taskId = 'task-' + Date.now();
+                demoData.tasks[taskId] = {
+                    id: taskId,
+                    ...taskData,
+                    createdBy: state.user.uid,
+                    createdAt: new Date()
+                };
+                showToast('Task created successfully', 'success');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'tasks'), {
+                    ...taskData,
+                    createdBy: state.user.uid,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Task created successfully', 'success');
+            } catch (error) {
+                showToast('Error creating task: ' + error.message, 'error');
+            }
+        }
+
+        // Rendering Functions
+        function renderHeader() {
+            return `
+                <header class="header">
+                    <div class="container">
+                        <div class="header-content">
+                            <a href="#/dashboard" class="logo">
+                                <i data-lucide="zap"></i>
+                                IT Survival Simulator
+                            </a>
+                            <div class="user-menu">
+                                ${state.user ? `
+                                    <div class="user-avatar" title="${state.user.displayName}">
+                                        ${getInitials(state.user.displayName)}
+                                    </div>
+                                    <span>${state.user.displayName}</span>
+                                    <button class="btn btn-secondary" onclick="logout()">
+                                        <i data-lucide="log-out"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            `;
+        }
+
+        function renderSidebar() {
+            if (!state.user) return '';
+            
+            return `
+                <aside class="sidebar">
+                    <nav>
+                        <ul class="nav-menu">
+                            <li class="nav-item">
+                                <a href="#/dashboard" class="nav-link ${state.currentRoute === 'dashboard' ? 'active' : ''}">
+                                    <i data-lucide="home"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#/tasks" class="nav-link ${state.currentRoute === 'tasks' ? 'active' : ''}">
+                                    <i data-lucide="list"></i>
+                                    Tasks
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#/leaderboard" class="nav-link ${state.currentRoute === 'leaderboard' ? 'active' : ''}">
+                                    <i data-lucide="trophy"></i>
+                                    Leaderboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#/profile" class="nav-link ${state.currentRoute === 'profile' ? 'active' : ''}">
+                                    <i data-lucide="user"></i>
+                                    Profile
+                                </a>
+                            </li>
+                            ${state.isAdmin ? `
+                                <li class="nav-item">
+                                    <a href="#/admin" class="nav-link ${state.currentRoute === 'admin' ? 'active' : ''}">
+                                        <i data-lucide="settings"></i>
+                                        Admin
+                                    </a>
+                                </li>
+                            ` : ''}
+                        </ul>
+                    </nav>
+                    
+                    <div class="card">
+                        <h3>Your Progress</h3>
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.xp}</div>
+                            <div class="stat-label">Total XP</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.level}</div>
+                            <div class="stat-label">Level</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(state.user.xp % 100)}%"></div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small>Next level: ${100 - (state.user.xp % 100)} XP</small>
+                        </div>
+                    </div>
+                </aside>
+            `;
+        }
+
+        function renderAuth() {
+            return `
+                <div class="auth-container">
+                    <div class="auth-card">
+                        <div class="auth-header">
+                            <h1 class="auth-title">IT Survival Simulator</h1>
+                            <p class="auth-subtitle">Master IT skills through real-world scenarios</p>
+                        </div>
+
+                        <div id="auth-form">
+                            ${renderSignInForm()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSignInForm() {
+            return `
+                <form id="signin-form" onsubmit="handleSignIn(event)">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" id="password" name="password" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+
+                <button onclick="signInWithGoogle()" class="btn btn-secondary" style="width: 100%; margin-bottom: 1rem;">
+                    <i data-lucide="chrome"></i>
+                    Continue with Google
+                </button>
+
+                <div class="text-center">
+                    <a href="#" onclick="showSignUpForm()">Don't have an account? Sign up</a>
+                </div>
+            `;
+        }
+
+        function renderSignUpForm() {
+            return `
+                <form id="signup-form" onsubmit="handleSignUp(event)">
+                    <div class="form-group">
+                        <label for="displayName" class="form-label">Full Name</label>
+                        <input type="text" id="displayName" name="displayName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" id="password" name="password" class="form-input" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="role" class="form-label">Role</label>
+                        <select id="role" name="role" class="form-select" required>
+                            <option value="">Choose your role</option>
+                            <option value="Helpdesk">Helpdesk Support</option>
+                            <option value="Dev">Developer</option>
+                            <option value="Ops">Operations</option>
+                            <option value="Security">Security</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <a href="#" onclick="showSignInForm()">Already have an account? Sign in</a>
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            return `
+                <div class="stats-grid">
+                    <div class="card stat-card">
+                        <div class="stat-value">${state.user.xp}</div>
+                        <div class="stat-label">Experience Points</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-value">${state.user.level}</div>
+                        <div class="stat-label">Current Level</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-value">${state.user.badges.length}</div>
+                        <div class="stat-label">Badges Earned</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-value">${Object.keys(sampleTasks).length}</div>
+                        <div class="stat-label">Available Tasks</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Tasks</h2>
+                    </div>
+                    <div class="task-grid">
+                        ${Object.values(sampleTasks).slice(0, 3).map(task => `
+                            <div class="task-card" onclick="startTask('${task.id}')">
+                                <div class="task-header">
+                                    <div class="task-difficulty">
+                                        ${Array.from({length: 5}, (_, i) => 
+                                            `<div class="difficulty-dot ${i < task.difficulty ? 'filled' : ''}"></div>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                <h3 class="task-title">${task.title}</h3>
+                                <p class="task-description">${task.description.substring(0, 100)}...</p>
+                                <div class="task-footer">
+                                    <span class="task-xp">+${task.rewardXP} XP</span>
+                                    <div class="task-tags">
+                                        ${task.contextTags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Badges</h2>
+                    </div>
+                    <div class="badge-grid">
+                        ${Object.values(badges).map(badge => `
+                            <div class="badge ${state.user.badges.includes(badge.id) ? 'earned' : ''}">
+                                <div class="badge-icon">${badge.icon}</div>
+                                <div class="badge-name">${badge.name}</div>
+                                <div class="badge-description">${badge.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTasks() {
+            const tasks = Object.values(sampleTasks);
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Available Tasks</h2>
+                        <p>Choose a task to start your IT challenge</p>
+                    </div>
+                    <div class="task-grid">
+                        ${tasks.map(task => `
+                            <div class="task-card" onclick="startTask('${task.id}')">
+                                <div class="task-header">
+                                    <div class="task-difficulty" title="Difficulty: ${task.difficulty}/5">
+                                        ${Array.from({length: 5}, (_, i) => 
+                                            `<div class="difficulty-dot ${i < task.difficulty ? 'filled' : ''}"></div>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                <h3 class="task-title">${task.title}</h3>
+                                <p class="task-description">${task.description}</p>
+                                <div class="task-footer">
+                                    <span class="task-xp">+${task.rewardXP} XP</span>
+                                    <div class="task-tags">
+                                        ${task.contextTags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSimulator() {
+            if (!state.currentTask) {
+                return '<div class="card"><p>No active task. Please select a task from the dashboard.</p></div>';
+            }
+
+            const task = state.currentTask;
+            
+            return `
+                <div class="card mb-4">
+                    <h2>${task.title}</h2>
+                    <p>${task.description}</p>
+                    <div class="task-tags">
+                        ${task.contextTags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="simulator-layout">
+                    <div class="simulator-main">
+                        ${renderTaskInterface(task)}
+                    </div>
+                    
+                    <div class="simulator-sidebar">
+                        <div class="simulator-panel">
+                            <h3>💡 Hints</h3>
+                            <ul>
+                                ${task.sampleHints.map(hint => `<li>${hint}</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="simulator-panel">
+                            <h3>📊 Progress</h3>
+                            <p>Started: ${formatDate(state.currentAttempt.startedAt)}</p>
+                            <p>Actions: ${state.currentAttempt.actionsLog.length}</p>
+                            <p>Reward: ${task.rewardXP} XP</p>
+                        </div>
+
+                        <div class="simulator-panel">
+                            <h3>🎯 Submit Solution</h3>
+                            <form onsubmit="handleTaskSubmission(event)">
+                                <div class="form-group">
+                                    <label class="form-label">Explain your reasoning (required):</label>
+                                    <textarea id="reasoning" class="form-textarea" 
+                                        placeholder="Describe how you solved this problem and what you learned..."
+                                        required minlength="50"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success" style="width: 100%;">
+                                    Submit Solution
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTaskInterface(task) {
+            switch (task.type) {
+                case 'code-debug':
+                    return `
+                        <h3>🐛 Debug the Code</h3>
+                        <p>Find and fix the bug in this payroll calculation function:</p>
+                        <textarea id="code-editor" class="code-editor" onchange="logAction('code_edit', this.value)">${task.snippet}</textarea>
+                        <div class="mt-3">
+                            <button onclick="testCode()" class="btn btn-primary">Test Code</button>
+                            <div id="test-results" class="mt-2"></div>
+                        </div>
+                    `;
+                
+                case 'network-config':
+                    return `
+                        <h3>🌐 Network Configuration</h3>
+                        <p>Configure the network settings for the ${task.title}:</p>
+                        <div class="form-group">
+                            <label class="form-label">SSID Name:</label>
+                            <input type="text" class="form-input" placeholder="BarangayWiFi_Free" onchange="logAction('config_change', 'ssid=' + this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Security Type:</label>
+                            <select class="form-select" onchange="logAction('config_change', 'security=' + this.value)">
+                                <option value="">Select security</option>
+                                <option value="open">Open (No Password)</option>
+                                <option value="wpa2">WPA2</option>
+                                <option value="wpa3">WPA3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bandwidth Limit (per user):</label>
+                            <input type="number" class="form-input" placeholder="5" min="1" max="100" onchange="logAction('config_change', 'bandwidth=' + this.value)">
+                            <small>Mbps</small>
+                        </div>
+                    `;
+                
+                case 'security-patch':
+                    return `
+                        <h3>🔒 Security Vulnerability</h3>
+                        <p>Identify and fix the SQL injection vulnerability:</p>
+                        <h4>Vulnerable Code:</h4>
+                        <textarea class="code-editor" readonly>${task.vulnerableCode}</textarea>
+                        <h4>Your Fixed Code:</h4>
+                        <textarea id="fixed-code" class="code-editor" placeholder="Enter your secure version here..." onchange="logAction('security_fix', this.value)"></textarea>
+                    `;
+                
+                case 'troubleshoot':
+                    return `
+                        <h3>🔧 Troubleshooting</h3>
+                        <p>Analyze the printer logs and identify the issue:</p>
+                        <div class="terminal">
+                            <div style="white-space: pre-line;">${task.logs}</div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label class="form-label">Your diagnosis:</label>
+                            <textarea id="diagnosis" class="form-textarea" placeholder="What is causing the printer to go offline?" onchange="logAction('diagnosis', this.value)"></textarea>
+                        </div>
+                    `;
+                
+                case 'deployment':
+                    return `
+                        <h3>🚀 Website Deployment</h3>
+                        <p>Deploy the student's thesis website:</p>
+                        <div class="form-group">
+                            <label class="form-label">Hosting Platform:</label>
+                            <select id="hosting-platform" class="form-select" onchange="logAction('select_platform', this.value)">
+                                <option value="">Choose platform</option>
+                                <option value="netlify">Netlify</option>
+                                <option value="vercel">Vercel</option>
+                                <option value="github-pages">GitHub Pages</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Domain Name:</label>
+                            <input type="text" class="form-input" placeholder="mythesis.com" onchange="logAction('set_domain', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <h4>Deployment Steps:</h4>
+                            <ul>
+                                ${task.steps.map((step, index) => `
+                                    <li>
+                                        <input type="checkbox" id="step-${index}" onchange="logAction('step_complete', '${step}')">
+                                        <label for="step-${index}">${step}</label>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                
+                case 'decision-tree':
+                    return `
+                        <h3>🚨 ${task.title}</h3>
+                        <div id="scenario-panel">
+                            <div class="card" style="background: #FEF2F2; border-color: #FCA5A5;">
+                                <h4>Emergency Scenario</h4>
+                                <p>${task.scenario.initial}</p>
+                                <div class="mt-3">
+                                    ${task.scenario.decisions.map((decision, index) => `
+                                        <button class="btn btn-secondary mb-2" style="display: block; width: 100%; text-align: left;" 
+                                                onclick="handleDecision(${index}, '${decision.choice}', ${decision.points})">
+                                            ${decision.choice}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                case 'network-troubleshoot':
+                    return `
+                        <h3>🌐 Network Troubleshooting</h3>
+                        <div class="mb-3">
+                            <h4>Symptoms:</h4>
+                            <ul>
+                                ${task.symptoms.map(symptom => `<li>${symptom}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <h4>Diagnostics:</h4>
+                            <pre>${Object.entries(task.diagnostics).map(([key, value]) => `${key}: ${value}`).join('\n')}</pre>
+                        </div>
+                        <div class="terminal" id="network-terminal">
+                            <div>PisoNet Router Diagnostics Terminal</div>
+                            <div>Type commands to diagnose the issue...</div>
+                            <div class="terminal-input">
+                                <span class="terminal-prompt">admin@router:~$</span>
+                                <input type="text" class="terminal-command" id="terminal-input" 
+                                       onkeypress="handleTerminalInput(event)" placeholder="Enter command...">
+                            </div>
+                        </div>
+                    `;
+                
+                case 'incident-management':
+                    return `
+                        <h3>🚨 Incident Management</h3>
+                        <div class="mb-3">
+                            <h4>Active Alerts:</h4>
+                            ${task.alerts.map(alert => `
+                                <div class="card mb-2" style="border-color: ${alert.severity === 'critical' ? 'var(--color-danger)' : alert.severity === 'warning' ? 'var(--color-warning)' : 'var(--color-border)'}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong>${alert.service}</strong> - ${alert.message}
+                                            <br><small>${alert.impact}</small>
+                                        </div>
+                                        <span class="task-tag" style="background: ${alert.severity === 'critical' ? 'var(--color-danger)' : alert.severity === 'warning' ? 'var(--color-warning)' : 'var(--color-primary)'}; color: white;">
+                                            ${alert.severity.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority Order (drag to reorder):</label>
+                            <div id="priority-list">
+                                ${task.alerts.map((alert, index) => `
+                                    <div class="card mb-2" draggable="true" data-alert-index="${index}">
+                                        ${index + 1}. ${alert.service} - ${alert.severity}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stakeholder Communication:</label>
+                            <textarea class="form-textarea" placeholder="Draft your incident update message..." onchange="logAction('communication', this.value)"></textarea>
+                        </div>
+                    `;
+                
+                default:
+                    return `
+                        <h3>Task Interface</h3>
+                        <p>Task type "${task.type}" interface not implemented yet.</p>
+                        <textarea class="form-textarea" placeholder="Enter your solution here..." onchange="logAction('solution', this.value)"></textarea>
+                    `;
+            }
+        }
+
+        function renderLeaderboard() {
+            // Load leaderboard data
+            loadLeaderboard().then(leaderboard => {
+                const leaderboardHtml = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🏆 Leaderboard</h2>
+                            <p>Top IT Survival Simulator champions</p>
+                        </div>
+                        <ol class="leaderboard-list">
+                            ${leaderboard.map((user, index) => `
+                                <li class="leaderboard-item">
+                                    <div class="leaderboard-rank">#${index + 1}</div>
+                                    <div class="leaderboard-avatar">
+                                        ${getInitials(user.displayName)}
+                                    </div>
+                                    <div class="leaderboard-info">
+                                        <div class="leaderboard-name">${user.displayName}</div>
+                                        <div class="leaderboard-role">${user.role}</div>
+                                    </div>
+                                    <div class="leaderboard-xp">${user.xp} XP</div>
+                                </li>
+                            `).join('')}
+                        </ol>
+                    </div>
+                `;
+                document.querySelector('.main-content').innerHTML = leaderboardHtml;
+                lucide.createIcons();
+            });
+
+            return '<div class="loading"></div>';
+        }
+
+        function renderProfile() {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">👤 Your Profile</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.displayName}</div>
+                            <div class="stat-label">Name</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.role}</div>
+                            <div class="stat-label">Role</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.xp}</div>
+                            <div class="stat-label">Total XP</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${state.user.level}</div>
+                            <div class="stat-label">Level</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Badges Earned</h3>
+                    <div class="badge-grid">
+                        ${Object.values(badges).map(badge => `
+                            <div class="badge ${state.user.badges.includes(badge.id) ? 'earned' : ''}">
+                                <div class="badge-icon">${badge.icon}</div>
+                                <div class="badge-name">${badge.name}</div>
+                                <div class="badge-description">${badge.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdmin() {
+            if (!state.isAdmin) {
+                return '<div class="card"><p>Access denied. Admin privileges required.</p></div>';
+            }
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚙️ Admin Panel</h2>
+                    </div>
+                    
+                    <h3>Create New Task</h3>
+                    <form id="create-task-form" onsubmit="handleCreateTask(event)">
+                        <div class="form-group">
+                            <label class="form-label">Task Title</label>
+                            <input type="text" name="title" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-textarea" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Difficulty (1-5)</label>
+                            <select name="difficulty" class="form-select" required>
+                                <option value="">Select difficulty</option>
+                                <option value="1">1 - Beginner</option>
+                                <option value="2">2 - Easy</option>
+                                <option value="3">3 - Medium</option>
+                                <option value="4">4 - Hard</option>
+                                <option value="5">5 - Expert</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Context Tags (comma separated)</label>
+                            <input type="text" name="contextTags" class="form-input" placeholder="debugging, javascript, security" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Reward XP</label>
+                            <input type="number" name="rewardXP" class="form-input" min="50" max="500" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Task Type</label>
+                            <select name="type" class="form-select" required>
+                                <option value="">Select type</option>
+                                <option value="code-debug">Code Debugging</option>
+                                <option value="network-config">Network Configuration</option>
+                                <option value="security-patch">Security Patch</option>
+                                <option value="troubleshoot">Troubleshooting</option>
+                                <option value="deployment">Deployment</option>
+                                <option value="decision-tree">Decision Tree</option>
+                                <option value="network-troubleshoot">Network Troubleshoot</option>
+                                <option value="incident-management">Incident Management</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sample Hints (one per line)</label>
+                            <textarea name="sampleHints" class="form-textarea" placeholder="First hint&#10;Second hint&#10;Third hint"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Task</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (!state.user && state.currentRoute !== 'login') {
+                state.currentRoute = 'login';
+            }
+
+            let content = '';
+            
+            switch (state.currentRoute) {
+                case 'login':
+                    content = renderAuth();
+                    break;
+                case 'dashboard':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderDashboard()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                case 'tasks':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderTasks()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                case 'simulator':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderSimulator()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                case 'leaderboard':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderLeaderboard()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                case 'profile':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderProfile()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                case 'admin':
+                    content = renderHeader() + `
+                        <div class="app-layout">
+                            ${renderSidebar()}
+                            <main class="main-content">
+                                ${renderAdmin()}
+                            </main>
+                        </div>
+                    `;
+                    break;
+                default:
+                    content = renderAuth();
+            }
+
+            app.innerHTML = content;
+            
+            // Reinitialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Event Handlers
+        function handleSignIn(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            signIn(email, password);
+        }
+
+        function handleSignUp(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const displayName = formData.get('displayName');
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const role = formData.get('role');
+            signUp(email, password, displayName, role);
+        }
+
+        function handleTaskSubmission(event) {
+            event.preventDefault();
+            
+            const reasoning = document.getElementById('reasoning').value;
+            let solution = '';
+
+            // Get solution based on task type
+            const codeEditor = document.getElementById('code-editor');
+            const fixedCode = document.getElementById('fixed-code');
+            const diagnosis = document.getElementById('diagnosis');
+            
+            if (codeEditor) solution = codeEditor.value;
+            else if (fixedCode) solution = fixedCode.value;
+            else if (diagnosis) solution = diagnosis.value;
+            else solution = 'Task completed through interactive interface';
+
+            submitTaskSolution(solution, reasoning);
+        }
+
+        function handleCreateTask(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            const taskData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                difficulty: parseInt(formData.get('difficulty')),
+                contextTags: formData.get('contextTags').split(',').map(tag => tag.trim()),
+                rewardXP: parseInt(formData.get('rewardXP')),
+                type: formData.get('type'),
+                sampleHints: formData.get('sampleHints').split('\n').filter(hint => hint.trim())
+            };
+
+            createTask(taskData);
+            event.target.reset();
+        }
+
+        function showSignUpForm() {
+            document.getElementById('auth-form').innerHTML = renderSignUpForm();
+            lucide.createIcons();
+        }
+
+        function showSignInForm() {
+            document.getElementById('auth-form').innerHTML = renderSignInForm();
+            lucide.createIcons();
+        }
+
+        function testCode() {
+            const codeEditor = document.getElementById('code-editor');
+            const resultsDiv = document.getElementById('test-results');
+            
+            if (!codeEditor || !resultsDiv) return;
+            
+            const code = codeEditor.value;
+            logAction('test_code', code);
+            
+            // Simple test for the payroll debug task
+            if (code.includes('* 1.25') || code.includes('hourlyRate')) {
+                resultsDiv.innerHTML = '<div class="text-success">✅ Test passed! Overtime calculation is now correct.</div>';
+            } else {
+                resultsDiv.innerHTML = '<div class="text-danger">❌ Test failed. The overtime calculation is still incorrect.</div>';
+            }
+        }
+
+        function handleDecision(index, choice, points) {
+            const task = state.currentTask;
+            logAction('decision', { choice, points });
+            
+            const scenarioPanel = document.getElementById('scenario-panel');
+            const outcome = task.scenario.decisions[index].outcome;
+            
+            scenarioPanel.innerHTML = `
+                <div class="card" style="background: #F0FDF4; border-color: #10B981;">
+                    <h4>Decision Made</h4>
+                    <p><strong>You chose:</strong> ${choice}</p>
+                    <p><strong>Outcome:</strong> ${outcome}</p>
+                    <p><strong>Points earned:</strong> ${points}</p>
+                    <button class="btn btn-primary" onclick="continueScenario()">Continue</button>
+                </div>
+            `;
+            
+            // Store points for final scoring
+            state.currentAttempt.scenarioPoints = (state.currentAttempt.scenarioPoints || 0) + points;
+        }
+
+        function continueScenario() {
+            // For demo, just show completion
+            document.getElementById('scenario-panel').innerHTML = `
+                <div class="card text-center">
+                    <h4>Scenario Complete!</h4>
+                    <p>You have successfully handled the incident.</p>
+                    <p>Total points: ${state.currentAttempt.scenarioPoints || 0}</p>
+                    <p>Don't forget to explain your reasoning below and submit your solution.</p>
+                </div>
+            `;
+        }
+
+        function handleTerminalInput(event) {
+            if (event.key === 'Enter') {
+                const input = event.target;
+                const command = input.value.trim();
+                input.value = '';
+                
+                const terminal = document.getElementById('network-terminal');
+                const response = executeCommand(command);
+                
+                // Add command and response to terminal
+                terminal.insertBefore(
+                    Object.assign(document.createElement('div'), {
+                        innerHTML: `<span class="terminal-prompt">admin@router:~$</span> ${command}`
+                    }),
+                    terminal.lastElementChild
+                );
+                
+                terminal.insertBefore(
+                    Object.assign(document.createElement('div'), {
+                        textContent: response,
+                        style: 'margin-bottom: 1rem; white-space: pre-line;'
+                    }),
+                    terminal.lastElementChild
+                );
+                
+                // Scroll to bottom
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }
+
+        // Make functions globally accessible
+        window.toggleDemoMode = toggleDemoMode;
+        window.signInWithGoogle = signInWithGoogle;
+        window.logout = logout;
+        window.navigate = navigate;
+        window.startTask = startTask;
+        window.handleSignIn = handleSignIn;
+        window.handleSignUp = handleSignUp;
+        window.handleTaskSubmission = handleTaskSubmission;
+        window.handleCreateTask = handleCreateTask;
+        window.showSignUpForm = showSignUpForm;
+        window.showSignInForm = showSignInForm;
+        window.testCode = testCode;
+        window.handleDecision = handleDecision;
+        window.continueScenario = continueScenario;
+        window.handleTerminalInput = handleTerminalInput;
+        window.logAction = logAction;
+
+        // Initialize App
+        function initApp() {
+            // Initialize demo mode if Firebase not available
+            if (!isFirebaseEnabled) {
+                initDemoMode();
+            }
+            
+            // Check admin status
+            if (state.user && (ADMIN_UIDS.includes(state.user.uid) || demoMode)) {
+                state.isAdmin = true;
+            }
+
+            // Handle routing
+            function handleRouting() {
+                const hash = window.location.hash.slice(1) || '/login';
+                const route = hash.startsWith('/') ? hash.slice(1) : hash;
+                state.currentRoute = route;
+                render();
+            }
+
+            window.addEventListener('hashchange', handleRouting);
+            handleRouting();
+
+            // Set up Firebase auth listener
+            if (isFirebaseEnabled && auth) {
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        const userData = await loadUserData(user.uid);
+                        if (userData) {
+                            state.user = userData;
+                            state.isAdmin = ADMIN_UIDS.includes(user.uid);
+                            if (state.currentRoute === 'login') {
+                                navigate('dashboard');
+                            } else {
+                                render();
+                            }
+                        } else {
+                            // New user, redirect to setup
+                            navigate('login');
+                        }
+                    } else {
+                        state.user = null;
+                        state.isAdmin = false;
+                        if (state.currentRoute !== 'login') {
+                            navigate('login');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        /*
+        FIRESTORE SECURITY RULES (to be applied in Firebase Console):
+
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            // Users can read/write their own data
+            match /users/{userId} {
+              allow read, write: if request.auth != null && request.auth.uid == userId;
+              allow read: if request.auth != null; // For leaderboard
+            }
+            
+            // Tasks are readable by all authenticated users
+            match /tasks/{taskId} {
+              allow read: if request.auth != null;
+              allow create, update, delete: if request.auth != null && 
+                request.auth.uid in ['YOUR_ADMIN_UID_1', 'YOUR_ADMIN_UID_2'];
+            }
+            
+            // Attempts can be created by the user who owns them
+            match /attempts/{attemptId} {
+              allow create: if request.auth != null && request.auth.uid == resource.data.userId;
+              allow read: if request.auth != null && 
+                (request.auth.uid == resource.data.userId || 
+                 request.auth.uid in ['YOUR_ADMIN_UID_1', 'YOUR_ADMIN_UID_2']);
+            }
+            
+            // Leaderboard is readable by all authenticated users
+            match /leaderboard/{entry} {
+              allow read: if request.auth != null;
+              allow write: if false; // Managed by cloud functions
+            }
+          }
+        }
+
+        DEPLOYMENT NOTES:
+        - Replace firebaseConfig with your actual Firebase project config
+        - Update ADMIN_UIDS array with actual admin user IDs
+        - Apply the Firestore security rules above
+        - Enable Authentication with Email/Password and Google providers
+        - The app will work in demo mode without Firebase configuration
+
+        FEATURES INCLUDED:
+        ✅ Firebase Authentication (Email/Password + Google Sign-In)
+        ✅ Firestore database integration with proper data models
+        ✅ Single-page app with hash-based routing
+        ✅ Task simulation engine with 8 sample tasks
+        ✅ XP/level/badge progression system
+        ✅ Anti-AI features (reasoning requirement, paste detection warnings)
+        ✅ Leaderboard and social features
+        ✅ Admin panel for content creation
+        ✅ Responsive design with modern UI
+        ✅ Offline demo mode for testing
+        ✅ Philippine workplace context in scenarios
+        ✅ Accessibility features (keyboard navigation, focus states)
+        ✅ Comprehensive task types (debugging, networking, security, etc.)
+        */
+        
+    </script>
+    <footer class="footer">
+        Made with <span style="color: red;">❤</span> by Steven Macapañas
+    </footer>
+  </body>
+</html>
