@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💬 Public Chat - IT Survival Simulator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #ffffff;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 15px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, #ffd700, #ffed4e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .chat-box {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 1rem;
+      height: 60vh;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      position: relative;
+    }
+
+    .message .user {
+      font-weight: 600;
+      color: #ffd700;
+    }
+
+    .actions {
+      margin-top: 5px;
+      font-size: 0.8rem;
+    }
+
+    .actions button {
+      background: none;
+      border: none;
+      color: #4facfe;
+      cursor: pointer;
+      margin-right: 8px;
+      padding: 0;
+    }
+
+    .actions button:hover {
+      text-decoration: underline;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1rem;
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💬 Public Chat</h1>
+      <p>Connect and talk with all IT Survivors in real-time</p>
+      <button class="btn" onclick="window.location.href='index.html'">⬅️ Back to IT Survival Simulator</button>
+    </div>
+
+    <div id="chatBox" class="chat-box"></div>
+
+    <div class="input-group">
+      <input type="text" id="chatInput" placeholder="Type your message..." />
+      <button class="btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase config (same as it.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDMZ08dDkvQVZYJjnup6BoyHlcK9pyICI",
+      authDomain: "survivalit-d6575.firebaseapp.com",
+      projectId: "survivalit-d6575",
+      storageBucket: "survivalit-d6575.firebasestorage.app",
+      messagingSenderId: "1008093127074",
+      appId: "1:1008093127074:web:1be543615fef82286e52fb",
+      measurementId: "G-QXRS2YL3VX"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+
+    let currentUser = null;
+
+    // Auth state listener
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+      } else {
+        // Auto sign in anonymously if not logged in
+        auth.signInAnonymously().catch(console.error);
+      }
+    });
+
+    // Load messages in real time
+    const chatBox = document.getElementById("chatBox");
+    firestore.collection("publicChat")
+      .orderBy("timestamp", "asc")
+      .onSnapshot(snapshot => {
+        chatBox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.classList.add("message");
+          div.innerHTML = `
+            <span class="user">${msg.user || "Anonymous"}:</span> ${msg.text}
+          `;
+          // Show edit/delete only for message owner
+          if (msg.uid === currentUser?.uid) {
+            const actions = document.createElement("div");
+            actions.classList.add("actions");
+            actions.innerHTML = `
+              <button onclick="editMessage('${doc.id}', '${msg.text.replace(/'/g, "\\'")}')">✏️ Edit</button>
+              <button onclick="deleteMessage('${doc.id}')">❌ Unsend</button>
+            `;
+            div.appendChild(actions);
+          }
+          chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+    // Send message
+    async function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      await firestore.collection("publicChat").add({
+        uid: currentUser?.uid,
+        user: currentUser?.displayName || currentUser?.email || "Anonymous",
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      input.value = "";
+    }
+
+    // Edit message
+    async function editMessage(id, oldText) {
+      const newText = prompt("Edit your message:", oldText);
+      if (newText && newText.trim() !== "") {
+        await firestore.collection("publicChat").doc(id).update({
+          text: newText.trim()
+        });
+      }
+    }
+
+    // Delete (unsend) message
+    async function deleteMessage(id) {
+      if (confirm("Do you want to unsend this message?")) {
+        await firestore.collection("publicChat").doc(id).delete();
+      }
+    }
+  </script>
+</body>
+</html>
