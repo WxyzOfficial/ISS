@@ -3,50 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Survival Simulator - Philippine IT Skills Training</title>
-    
-    <!-- 
-    IT SURVIVAL SIMULATOR
-    ====================
-    A gamified learning platform for Philippine IT students
-    Made with ❤ by Steven Macapañas
-    
-    TESTING CHECKLIST:
-    1. ✓ Firebase init runs on fresh browser
-    2. ✓ User signup/login with email and Google
-    3. ✓ Dashboard shows tasks from Firestore
-    4. ✓ Auto-seeds 100 tasks if collection empty  
-    5. ✓ Focus enforcement detects tab switches
-    6. ✓ Copy/paste blocking with penalties
-    7. ✓ Task submission and scoring works
-    8. ✓ Progress persists in Firestore
-    9. ✓ Responsive UI on mobile/desktop
-    10. ✓ Single file deployment ready
-    
-    FIRESTORE SECURITY RULES (Set in Firebase Console):
-    ```
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-        match /users/{userId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        match /tasks/{taskId} {
-          allow read: if true;
-          allow write: if request.auth != null;
-        }
-        match /userProgress/{progressId} {
-          allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
-        }
-        match /leaderboard/{doc=**} {
-          allow read: if true;
-          allow write: if request.auth != null;
-        }
-      }
-    }
-    ```
-    -->
-    
+    <title>IT Survival Simulator - Philippine IT Skills Training</title>    
     <style>
         * {
             margin: 0;
@@ -616,16 +573,6 @@
                         </div>
                     </div>
 
-                    <!-- Daily Mission -->
-                    <div class="card">
-                        <h4>🎯 Daily Mission</h4>
-                        <p id="dailyMission">Complete 3 tasks today!</p>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="dailyProgress" style="width: 0%"></div>
-                        </div>
-                        <p id="dailyProgressText">0/3 completed</p>
-                    </div>
-
                     <!-- Recent Badges -->
                     <div class="card">
                         <h4>🏆 Recent Badges</h4>
@@ -643,9 +590,15 @@
                     </div>
 
                     <!-- User Actions -->
-                    <div class="card">
-                        <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-bottom: 10px;">Logout</button>
-                    </div>
+<div class="card">
+    <button class="btn btn-success" onclick="window.location.href='chat.html'" style="width: 100%; margin-bottom: 10px;">
+        💬 Public Chat
+    </button>
+    <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-bottom: 10px;">
+        Logout
+    </button>
+</div>
+
                 </div>
             </div>
         </div>
