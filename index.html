@@ -469,7 +469,7 @@
                         <p><strong>Important:</strong> This platform is designed to encourage focused learning:</p>
                         <ul style="margin: 1rem 0;">
                             <li>🚫 <strong>Copy/Paste is disabled to ensure authentic learning.</strong> - Only manual typing is allowed</li>
-                            <li>🚫 <strong>Tab switching ay monitored</strong> - Mag-stay sa task</li>
+                            <li>🚫 <strong>Tab switching ay monitored</strong> - Focus on the task</li>
                             <li>⚡ <strong>Penalties:</strong> 1st = Warning, 2nd = Points deduction, 3rd = Task fail</li>
                             <li>🎯 <strong>Goal:</strong> Master problem-solving instead of relying on shortcuts.</li>
                         </ul>
@@ -1025,7 +1025,6 @@
                         <h4>${task.title}</h4>
                         <p style="opacity: 0.8; margin: 10px 0;">${task.description.substring(0, 100)}...</p>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                            <span>🎯 ${task.points} points</span>
                             <span>⏱️ ${Math.floor(task.timeLimitSeconds / 60)}min</span>
                             ${isCompleted ? '<span style="color: #4CAF50;">Completed</span>' : ''}
                         </div>
@@ -1203,7 +1202,7 @@
                 ` : `
                     <div class="card">
                         <h3 style="color: #4CAF50; text-align: center;">Task Completed!</h3>
-                        <p style="text-align: center;">You've already completed this task. Great job!</p>
+                        <p style="text-align: center;">You've already completed this task.</p>
                         ${userProgress[currentTask.id] ? `
                             <p><strong>Score:</strong> ${userProgress[currentTask.id].score} points</p>
                             <p><strong>Completed:</strong> ${new Date(userProgress[currentTask.id].completedAt.seconds * 1000).toLocaleString()}</p>
