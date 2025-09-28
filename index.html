@@ -1624,7 +1624,7 @@
         function preventShortcuts(e) {
             if (isTaskActive) {
                 const forbiddenKeys = [
-                    'KeyC', 'KeyV', 'KeyX', 'KeyT', 'KeyW', 'KeyN'
+                    'KeyC', 'KeyV', 'KeyX', 'KeyT', 'KeyW', 'KeyN', 'F12'
                 ];
                 
                 if ((e.ctrlKey || e.metaKey) && forbiddenKeys.includes(e.code)) {
@@ -2167,4 +2167,5 @@
     </script>
 </body>
 </html>
+
 
