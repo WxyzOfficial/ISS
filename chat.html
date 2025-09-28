@@ -9,16 +9,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #141e30, #243b55);
-      color: #f9f9f9;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      transition: background 0.3s, color 0.3s;
-    }
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #1e3a8a;
+  color: #f9f9f9;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;   /* 🔹 Stack vertically */
+  justify-content: center;  /* 🔹 Center content vertically */
+  align-items: center;      /* 🔹 Center horizontally */
+  padding: 20px;
+  transition: background 0.3s, color 0.3s;
+}
+
 
     body.light {
       background: linear-gradient(135deg, #f0f0f0, #ffffff);
@@ -93,16 +96,20 @@
     }
 
     /* ===== Chat Box ===== */
-    .chat-box {
-    flex: 1;
-    height: 400px;          /* 🔹 Fixed height */
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 15px;
-    overflow-y: auto;       /* 🔹 Always scrollable */
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
+/* ===== Chat Box ===== */
+.chat-box {
+  flex: 1;
+  min-height: 600px;       /* 🔹 Always keeps space, even when empty */
+  max-height: 600px;       /* 🔹 Prevents it from taking too much space */
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 15px;
+  overflow-y: auto;        /* 🔹 Scrolls when full */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 
 
     body.light .chat-box {
@@ -228,6 +235,16 @@
 
     .confirm-btn { background: #4caf50; color: white; }
     .cancel-btn { background: #e53935; color: white; }
+
+    footer {
+  text-align: center;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  width: 100%;             /* 🔹 Keep footer centered below */
+  max-width: 800px;        /* 🔹 Match container width */
+}
+
   </style>
 </head>
 <body>
@@ -321,7 +338,12 @@
           }
           chatBox.appendChild(div);
         });
-        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // ✅ Smart auto-scroll
+        const isAtBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
+        if (isAtBottom) {
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
       });
 
     async function sendMessage() {
@@ -386,6 +408,12 @@
       document.body.classList.toggle("light");
       localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     };
+
+    
   </script>
+  <!-- Footer -->
+    <footer style="text-align: center; padding: 2rem; margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.2);">
+      <p style="opacity: 0.8;">Made with ❤️ by Steven Macapañas</p>
+    </footer>
 </body>
 </html>
