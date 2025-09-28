@@ -8,7 +8,6 @@
   <style>
     /* ===== Reset & Base ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #1e3a8a;
@@ -16,24 +15,25 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
       padding: 20px;
       transition: background 0.3s, color 0.3s;
     }
 
-    body.light { 
-      background: linear-gradient(135deg, #f0f0f0, #ffffff); 
-      color: #222; 
+    body.light {
+      background: linear-gradient(135deg, #f0f0f0, #ffffff);
+      color: #222;
     }
 
     .container {
       width: 100%;
       max-width: 800px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 20px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -41,7 +41,7 @@
     }
 
     body.light .container {
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
@@ -49,7 +49,7 @@
     .header {
       text-align: center;
       padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -66,12 +66,7 @@
     .header p { font-size: 0.95rem; color: #dcdcdc; }
     body.light .header p { color: #444; }
 
-    .header .btn-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
+    .btn-row { display: flex; gap: 10px; justify-content: center; }
     .btn {
       background: linear-gradient(45deg, #667eea, #764ba2);
       color: white;
@@ -83,94 +78,64 @@
       font-weight: 600;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
 
     /* ===== Chat Box ===== */
     .chat-box {
       flex: 1;
       min-height: 600px;
       max-height: 600px;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       border-radius: 16px;
       padding: 15px;
       overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      border: 1px solid rgba(255,255,255,0.15);
+      gap: 10px;
     }
-
-    body.light .chat-box {
-      background: rgba(0,0,0,0.05);
-      border-color: rgba(0,0,0,0.1);
-    }
+    body.light .chat-box { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
 
     .message {
       max-width: 70%;
-      padding: 12px 16px;
+      padding: 10px 14px;
       border-radius: 20px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.15);
       position: relative;
+      display: inline-block;
       word-wrap: break-word;
       transition: background 0.3s;
     }
+    .message:hover { background: rgba(255,255,255,0.25); }
+    body.light .message { background: rgba(0,0,0,0.08); }
+    body.light .message:hover { background: rgba(0,0,0,0.15); }
 
-    .message:hover { background: rgba(255,255,255,0.15); }
-    body.light .message { background: rgba(0,0,0,0.05); }
-    body.light .message:hover { background: rgba(0,0,0,0.1); }
+    /* Message alignment */
+    .message.left { align-self: flex-start; background: rgba(255,255,255,0.12); border-top-left-radius: 4px; }
+    .message.right { align-self: flex-end; background: rgba(72,187,120,0.85); color: white; border-top-right-radius: 4px; }
 
-    /* Right/Left alignment */
-    .message.self { 
-      align-self: flex-end; 
-      background: #4facfe;
-      color: #fff;
-      border-bottom-right-radius: 4px;
+    .message .user { font-weight: 600; margin-right: 6px; opacity: 0.8; }
+    .actions {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      display: flex;
+      gap: 8px;
     }
-
-    .message.other { 
-      align-self: flex-start; 
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-      border-bottom-left-radius: 4px;
-    }
-
-    .message .user { 
-      font-weight: 600; 
-      font-size: 0.85rem; 
-      margin-bottom: 4px; 
-      display: block;
-      opacity: 0.8;
-    }
-
-    .actions { 
-      margin-top: 6px; 
-      font-size: 0.8rem; 
-      display: flex; 
-      gap: 12px; 
-      justify-content: flex-end;
-    }
-
     .actions button {
       background: none;
       border: none;
-      color: #fff;
-      opacity: 0.7;
+      color: #4facfe;
       cursor: pointer;
       transition: color 0.2s ease;
+      font-size: 0.8rem;
     }
-
-    .actions button:hover { color: #ffd700; }
+    .actions button:hover { color: #00c6ff; }
 
     /* ===== Input Section ===== */
     .input-group {
       display: flex;
       gap: 12px;
     }
-
     .input-group input {
       flex: 1;
       padding: 14px;
@@ -182,11 +147,44 @@
       font-size: 1rem;
       transition: background 0.3s ease;
     }
-
     .input-group input:focus { background: rgba(255,255,255,0.2); }
     body.light .input-group input { background: rgba(0,0,0,0.05); color: #222; }
 
-    /* ===== Footer ===== */
+    /* ===== Modals ===== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal.active { visibility: visible; opacity: 1; }
+    .modal-content {
+      background: #fff;
+      color: #222;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .modal-content h3 { margin-bottom: 10px; }
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+    .modal-buttons button { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .confirm-btn { background: #4caf50; color: white; }
+    .cancel-btn { background: #e53935; color: white; }
+
     footer {
       text-align: center;
       padding: 1.5rem;
@@ -195,8 +193,6 @@
       width: 100%;
       max-width: 800px;
     }
-
-    footer p { opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -218,29 +214,51 @@
     </div>
   </div>
 
-  <footer>
-    <p>Made with ❤️ by Steven Macapañas</p>
-  </footer>
+  <!-- Modals -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h3>Unsend Message?</h3>
+      <p>This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="confirm-btn" id="confirmYes">Yes</button>
+        <button class="cancel-btn" id="confirmNo">No</button>
+      </div>
+    </div>
+  </div>
 
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Message</h3>
+      <input type="text" id="editInput" />
+      <div class="modal-buttons">
+        <button class="confirm-btn" id="editSave">Save</button>
+        <button class="cancel-btn" id="editCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDDMZ08dDkvQVZYJjnup6BoyHlcK9pyICI",
       authDomain: "survivalit-d6575.firebaseapp.com",
       projectId: "survivalit-d6575",
-      storageBucket: "survivalit-d6575.firebasestorage.app",
+      storageBucket: "survivalit-d6575.appspot.com",
       messagingSenderId: "1008093127074",
       appId: "1:1008093127074:web:1be543615fef82286e52fb",
       measurementId: "G-QXRS2YL3VX"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const firestore = firebase.firestore();
 
     let currentUser = null;
+    let deleteId = null;
+    let editId = null;
 
     auth.onAuthStateChanged(user => {
       if (user) currentUser = user;
@@ -255,8 +273,18 @@
           const msg = doc.data();
           const div = document.createElement("div");
           div.classList.add("message");
-          div.classList.add(msg.uid === currentUser?.uid ? "self" : "other");
-          div.innerHTML = `<span class="user">${msg.user || "Anonymous"}</span>${msg.text}`;
+          div.classList.add(msg.uid === currentUser?.uid ? "right" : "left");
+          div.innerHTML = `<span class="user">${msg.user || "Anonymous"}:</span> ${msg.text}`;
+          
+          if (msg.uid === currentUser?.uid) {
+            const actions = document.createElement("div");
+            actions.classList.add("actions");
+            actions.innerHTML = `
+              <button onclick="openEdit('${doc.id}', \`${msg.text}\`)"><i class="fas fa-pen"></i></button>
+              <button onclick="openConfirm('${doc.id}')"><i class="fas fa-trash"></i></button>
+            `;
+            div.appendChild(actions);
+          }
           chatBox.appendChild(div);
         });
 
@@ -275,18 +303,54 @@
         text,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
-
       input.value = "";
     }
 
-    // === Light/Dark Toggle ===
+    function openConfirm(id) {
+      deleteId = id;
+      document.getElementById("confirmModal").classList.add("active");
+    }
+
+    document.getElementById("confirmYes").onclick = async () => {
+      if (deleteId) await firestore.collection("publicChat").doc(deleteId).delete();
+      document.getElementById("confirmModal").classList.remove("active");
+      deleteId = null;
+    };
+    document.getElementById("confirmNo").onclick = () => {
+      document.getElementById("confirmModal").classList.remove("active");
+      deleteId = null;
+    };
+
+    function openEdit(id, oldText) {
+      editId = id;
+      document.getElementById("editInput").value = oldText;
+      document.getElementById("editModal").classList.add("active");
+    }
+
+    document.getElementById("editSave").onclick = async () => {
+      const newText = document.getElementById("editInput").value.trim();
+      if (editId && newText) {
+        await firestore.collection("publicChat").doc(editId).update({ text: newText });
+      }
+      document.getElementById("editModal").classList.remove("active");
+      editId = null;
+    };
+    document.getElementById("editCancel").onclick = () => {
+      document.getElementById("editModal").classList.remove("active");
+      editId = null;
+    };
+
     const themeToggle = document.getElementById("themeToggle");
     if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
-
     themeToggle.onclick = () => {
       document.body.classList.toggle("light");
       localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     };
   </script>
+
+  <!-- Footer -->
+  <footer>
+    <p style="opacity: 0.8;">Made with ❤️ by Steven Macapañas</p>
+  </footer>
 </body>
 </html>
