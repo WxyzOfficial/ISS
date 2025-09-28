@@ -6,11 +6,7 @@
   <title>💬 Public Chat - IT Survival Simulator</title>
   <style>
     /* ===== Reset & Base ===== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,6 +17,12 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.light {
+      background: linear-gradient(135deg, #f0f0f0, #ffffff);
+      color: #222;
     }
 
     .container {
@@ -34,6 +36,12 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      transition: background 0.3s;
+    }
+
+    body.light .container {
+      background: rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
     /* ===== Header ===== */
@@ -41,6 +49,9 @@
       text-align: center;
       padding-bottom: 10px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .header h1 {
@@ -49,7 +60,6 @@
       background: linear-gradient(90deg, #ffdd57, #f5e6a3);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 5px;
     }
 
     .header p {
@@ -57,21 +67,29 @@
       color: #dcdcdc;
     }
 
-    .header .btn-back {
-      margin-top: 10px;
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-      padding: 8px 14px;
+    body.light .header p { color: #444; }
+
+    .header .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 10px 16px;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       font-size: 0.9rem;
-      transition: all 0.25s ease;
+      font-weight: 600;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
-    .header .btn-back:hover {
-      background: rgba(255, 255, 255, 0.25);
+    .btn:hover {
       transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     }
 
     /* ===== Chat Box ===== */
@@ -82,17 +100,11 @@
       padding: 15px;
       overflow-y: auto;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      scrollbar-width: thin;
-      scrollbar-color: #888 transparent;
     }
 
-    .chat-box::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .chat-box::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
+    body.light .chat-box {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.1);
     }
 
     .message {
@@ -103,9 +115,10 @@
       transition: background 0.3s;
     }
 
-    .message:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
+    .message:hover { background: rgba(255, 255, 255, 0.15); }
+
+    body.light .message { background: rgba(0, 0, 0, 0.05); }
+    body.light .message:hover { background: rgba(0, 0, 0, 0.1); }
 
     .message .user {
       font-weight: 600;
@@ -125,13 +138,10 @@
       border: none;
       color: #4facfe;
       cursor: pointer;
-      padding: 0;
       transition: color 0.2s ease;
     }
 
-    .actions button:hover {
-      color: #00c6ff;
-    }
+    .actions button:hover { color: #00c6ff; }
 
     /* ===== Input Section ===== */
     .input-group {
@@ -146,32 +156,75 @@
       border: none;
       outline: none;
       background: rgba(255, 255, 255, 0.1);
-      color: white;
+      color: inherit;
       font-size: 1rem;
-      transition: background 0.3s ease, border 0.3s ease;
+      transition: background 0.3s ease;
     }
 
     .input-group input:focus {
       background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .btn {
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      color: white;
-      padding: 14px 22px;
-      border: none;
+    body.light .input-group input {
+      background: rgba(0, 0, 0, 0.05);
+      color: #222;
+    }
+
+    /* ===== Modal Styles ===== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: #fff;
+      color: #222;
+      padding: 20px;
       border-radius: 12px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    .modal-content h3 { margin-bottom: 10px; }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .modal-buttons button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .confirm-btn { background: #4caf50; color: white; }
+    .cancel-btn { background: #e53935; color: white; }
   </style>
 </head>
 <body>
@@ -179,7 +232,10 @@
     <div class="header">
       <h1>💬 Public Chat</h1>
       <p>Connect and talk with IT Survivors.</p>
-      <button class="btn-back" onclick="window.location.href='index.html'">Return to IT Survival Simulator</button>
+      <div class="btn-row">
+        <button class="btn" onclick="window.location.href='index.html'">Return to ISS</button> <br>
+        <button class="btn" id="themeToggle">Toggle Dark | Light Mode</button>
+      </div>
     </div>
 
     <div id="chatBox" class="chat-box"></div>
@@ -187,6 +243,29 @@
     <div class="input-group">
       <input type="text" id="chatInput" placeholder="Type your message..." />
       <button class="btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h3>Unsend Message?</h3>
+      <p>This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="confirm-btn" id="confirmYes">Yes</button>
+        <button class="cancel-btn" id="confirmNo">No</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Message</h3>
+      <input type="text" id="editInput" />
+      <div class="modal-buttons">
+        <button class="confirm-btn" id="editSave">Save</button>
+        <button class="cancel-btn" id="editCancel">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -211,6 +290,8 @@
     const firestore = firebase.firestore();
 
     let currentUser = null;
+    let deleteId = null;
+    let editId = null;
 
     auth.onAuthStateChanged(user => {
       if (user) currentUser = user;
@@ -218,23 +299,20 @@
     });
 
     const chatBox = document.getElementById("chatBox");
-    firestore.collection("publicChat")
-      .orderBy("timestamp", "asc")
+    firestore.collection("publicChat").orderBy("timestamp", "asc")
       .onSnapshot(snapshot => {
         chatBox.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
           const div = document.createElement("div");
           div.classList.add("message");
-          div.innerHTML = `
-            <span class="user">${msg.user || "Anonymous"}:</span> ${msg.text}
-          `;
+          div.innerHTML = `<span class="user">${msg.user || "Anonymous"}:</span> ${msg.text}`;
           if (msg.uid === currentUser?.uid) {
             const actions = document.createElement("div");
             actions.classList.add("actions");
             actions.innerHTML = `
-              <button onclick="editMessage('${doc.id}', '${msg.text.replace(/'/g, "\\'")}')">✏ Edit</button>
-              <button onclick="deleteMessage('${doc.id}')">❌ Unsend</button>
+              <button onclick="openEdit('${doc.id}', \`${msg.text}\`)">✏ Edit</button>
+              <button onclick="openConfirm('${doc.id}')">❌ Unsend</button>
             `;
             div.appendChild(actions);
           }
@@ -258,20 +336,53 @@
       input.value = "";
     }
 
-    async function editMessage(id, oldText) {
-      const newText = prompt("Edit your message:", oldText);
-      if (newText && newText.trim() !== "") {
-        await firestore.collection("publicChat").doc(id).update({
-          text: newText.trim()
-        });
-      }
+    // === Delete Confirmation ===
+    function openConfirm(id) {
+      deleteId = id;
+      document.getElementById("confirmModal").classList.add("active");
     }
 
-    async function deleteMessage(id) {
-      if (confirm("Do you want to unsend this message?")) {
-        await firestore.collection("publicChat").doc(id).delete();
-      }
+    document.getElementById("confirmYes").onclick = async () => {
+      if (deleteId) await firestore.collection("publicChat").doc(deleteId).delete();
+      document.getElementById("confirmModal").classList.remove("active");
+      deleteId = null;
+    };
+
+    document.getElementById("confirmNo").onclick = () => {
+      document.getElementById("confirmModal").classList.remove("active");
+      deleteId = null;
+    };
+
+    // === Edit Modal ===
+    function openEdit(id, oldText) {
+      editId = id;
+      const input = document.getElementById("editInput");
+      input.value = oldText;
+      document.getElementById("editModal").classList.add("active");
     }
+
+    document.getElementById("editSave").onclick = async () => {
+      const newText = document.getElementById("editInput").value.trim();
+      if (editId && newText) {
+        await firestore.collection("publicChat").doc(editId).update({ text: newText });
+      }
+      document.getElementById("editModal").classList.remove("active");
+      editId = null;
+    };
+
+    document.getElementById("editCancel").onclick = () => {
+      document.getElementById("editModal").classList.remove("active");
+      editId = null;
+    };
+
+    // === Light/Dark Toggle ===
+    const themeToggle = document.getElementById("themeToggle");
+    if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
+
+    themeToggle.onclick = () => {
+      document.body.classList.toggle("light");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    };
   </script>
 </body>
 </html>
