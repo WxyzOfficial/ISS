@@ -94,13 +94,16 @@
 
     /* ===== Chat Box ===== */
     .chat-box {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      padding: 15px;
-      overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+    flex: 1;
+    height: 400px;          /* 🔹 Fixed height */
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 15px;
+    overflow-y: auto;       /* 🔹 Always scrollable */
+    border: 1px solid rgba(255, 255, 255, 0.15);
     }
+
+
 
     body.light .chat-box {
       background: rgba(0, 0, 0, 0.05);
