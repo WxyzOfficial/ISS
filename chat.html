@@ -194,8 +194,6 @@
       max-width: 800px;
     }
   </style>
-    <!-- Favicon -->
-  <link rel="icon" type="image/png" href="logo.png" />
 </head>
 <body>
   <div class="container">
@@ -348,6 +346,14 @@
       document.body.classList.toggle("light");
       localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     };
+    // Prevent F12 (Inspect Element)
+    document.addEventListener('keydown', function(e) {
+    if (e.code === 'F12') {
+      e.preventDefault();
+      alert("Inspect Element is disabled."); // Optional feedback
+      return false;
+    }
+  });
   </script>
 
   <!-- Footer -->
@@ -356,5 +362,4 @@
   </footer>
 </body>
 </html>
-
 
