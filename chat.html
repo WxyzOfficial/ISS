@@ -5,65 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>💬 Public Chat - IT Survival Simulator</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: #ffffff;
-      min-height: 100vh;
+    /* ===== Reset & Base ===== */
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
+    body {
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: #f9f9f9;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 20px;
     }
 
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ===== Header ===== */
     .header {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 1rem;
-      border-radius: 15px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .header h1 {
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(45deg, #ffd700, #ffed4e);
+      background: linear-gradient(90deg, #ffdd57, #f5e6a3);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
     }
 
+    .header p {
+      font-size: 0.95rem;
+      color: #dcdcdc;
+    }
+
+    .header .btn-back {
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.25s ease;
+    }
+
+    .header .btn-back:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* ===== Chat Box ===== */
     .chat-box {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 1rem;
-      height: 60vh;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 15px;
       overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      margin-bottom: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      scrollbar-width: thin;
+      scrollbar-color: #888 transparent;
+    }
+
+    .chat-box::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
     }
 
     .message {
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 8px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: background 0.3s;
+    }
+
+    .message:hover {
       background: rgba(255, 255, 255, 0.15);
-      position: relative;
     }
 
     .message .user {
       font-weight: 600;
-      color: #ffd700;
+      color: #ffdd57;
+      margin-right: 6px;
     }
 
     .actions {
-      margin-top: 5px;
+      margin-top: 6px;
       font-size: 0.8rem;
+      display: flex;
+      gap: 12px;
     }
 
     .actions button {
@@ -71,45 +125,52 @@
       border: none;
       color: #4facfe;
       cursor: pointer;
-      margin-right: 8px;
       padding: 0;
+      transition: color 0.2s ease;
     }
 
     .actions button:hover {
-      text-decoration: underline;
+      color: #00c6ff;
     }
 
+    /* ===== Input Section ===== */
     .input-group {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 12px;
     }
 
     .input-group input {
       flex: 1;
-      padding: 12px;
-      border-radius: 8px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
       background: rgba(255, 255, 255, 0.1);
       color: white;
       font-size: 1rem;
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+
+    .input-group input:focus {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .btn {
       background: linear-gradient(45deg, #667eea, #764ba2);
       color: white;
-      padding: 12px 20px;
+      padding: 14px 22px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 1rem;
       font-weight: 600;
-      transition: all 0.3s ease;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     }
   </style>
 </head>
@@ -117,8 +178,8 @@
   <div class="container">
     <div class="header">
       <h1>💬 Public Chat</h1>
-      <p>Connect and talk with all IT Survivors in real-time</p>
-      <button class="btn" onclick="window.location.href='index.html'">⬅️ Back to IT Survival Simulator</button>
+      <p>Connect and talk with IT Survivors.</p>
+      <button class="btn-back" onclick="window.location.href='index.html'">Return to IT Survival Simulator</button>
     </div>
 
     <div id="chatBox" class="chat-box"></div>
@@ -135,7 +196,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config (same as it.html)
     const firebaseConfig = {
       apiKey: "AIzaSyDDMZ08dDkvQVZYJjnup6BoyHlcK9pyICI",
       authDomain: "survivalit-d6575.firebaseapp.com",
@@ -152,17 +212,11 @@
 
     let currentUser = null;
 
-    // Auth state listener
     auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-      } else {
-        // Auto sign in anonymously if not logged in
-        auth.signInAnonymously().catch(console.error);
-      }
+      if (user) currentUser = user;
+      else auth.signInAnonymously().catch(console.error);
     });
 
-    // Load messages in real time
     const chatBox = document.getElementById("chatBox");
     firestore.collection("publicChat")
       .orderBy("timestamp", "asc")
@@ -175,12 +229,11 @@
           div.innerHTML = `
             <span class="user">${msg.user || "Anonymous"}:</span> ${msg.text}
           `;
-          // Show edit/delete only for message owner
           if (msg.uid === currentUser?.uid) {
             const actions = document.createElement("div");
             actions.classList.add("actions");
             actions.innerHTML = `
-              <button onclick="editMessage('${doc.id}', '${msg.text.replace(/'/g, "\\'")}')">✏️ Edit</button>
+              <button onclick="editMessage('${doc.id}', '${msg.text.replace(/'/g, "\\'")}')">✏ Edit</button>
               <button onclick="deleteMessage('${doc.id}')">❌ Unsend</button>
             `;
             div.appendChild(actions);
@@ -190,7 +243,6 @@
         chatBox.scrollTop = chatBox.scrollHeight;
       });
 
-    // Send message
     async function sendMessage() {
       const input = document.getElementById("chatInput");
       const text = input.value.trim();
@@ -206,7 +258,6 @@
       input.value = "";
     }
 
-    // Edit message
     async function editMessage(id, oldText) {
       const newText = prompt("Edit your message:", oldText);
       if (newText && newText.trim() !== "") {
@@ -216,7 +267,6 @@
       }
     }
 
-    // Delete (unsend) message
     async function deleteMessage(id) {
       if (confirm("Do you want to unsend this message?")) {
         await firestore.collection("publicChat").doc(id).delete();
